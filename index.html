@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medium Well Production</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;1,300;1,400&family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #070707;
+      --cream: #f0ece3;
+      --amber: #c8a46a;
+      --muted: rgba(240,236,227,0.35);
+      --line: rgba(240,236,227,0.1);
+      --F: 'Cormorant', serif;
+      --M: 'DM Mono', monospace;
+      --I: 'Bebas Neue', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--cream);
+      font-family: var(--M);
+      cursor: none;
+      overflow-x: hidden;
+    }
+
+    /* ── Cursor ── */
+    #cur, #cur-r {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%,-50%);
+      mix-blend-mode: difference;
+    }
+    #cur {
+      width: 7px; height: 7px;
+      background: var(--cream);
+      transition: transform 0.12s, width 0.2s, height 0.2s;
+    }
+    #cur-r {
+      width: 30px; height: 30px;
+      border: 1px solid rgba(240,236,227,0.5);
+      background: transparent;
+      transition: all 0.18s ease-out;
+    }
+    body:hover #cur { opacity: 1; }
+
+    /* ── Grain ── */
+    #grain {
+      position: fixed; inset: -50%;
+      width: 200%; height: 200%;
+      pointer-events: none; z-index: 200;
+      opacity: 0.045;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+      animation: grain 0.4s steps(1) infinite;
+    }
+    @keyframes grain {
+      0%  { transform: translate(0,0); }
+      20% { transform: translate(-3%,2%); }
+      40% { transform: translate(2%,-3%); }
+      60% { transform: translate(-2%,3%); }
+      80% { transform: translate(3%,-2%); }
+      100%{ transform: translate(-1%,1%); }
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 26px 48px;
+    }
+    nav::after {
+      content: ''; position: absolute; bottom: 0; left: 48px; right: 48px;
+      height: 1px; background: var(--line);
+    }
+    .nav-logo {
+      font-family: var(--M); font-size: 10px; font-weight: 300;
+      letter-spacing: 0.35em; text-transform: uppercase;
+      color: var(--cream); text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links a {
+      font-family: var(--M); font-size: 9px; font-weight: 300;
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--muted); text-decoration: none; transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--cream); }
+
+    /* ── Hero ── */
+    #hero {
+      height: 100vh; position: relative; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 0 48px 72px;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 25% 60%, rgba(160,80,20,0.1) 0%, transparent 55%),
+                  radial-gradient(ellipse at 75% 20%, rgba(80,40,100,0.06) 0%, transparent 50%),
+                  #070707;
+    }
+    .hero-content { position: relative; z-index: 1; }
+    .hero-label {
+      font-size: 9px; letter-spacing: 0.5em; text-transform: uppercase;
+      color: var(--amber); margin-bottom: 24px; font-weight: 300;
+      opacity: 0; transform: translateY(12px);
+      animation: rise 1s ease 0.3s forwards;
+    }
+    .hero-title {
+      font-family: var(--F); font-size: clamp(64px, 11vw, 148px);
+      font-weight: 300; font-style: italic; line-height: 0.88;
+      color: var(--cream); max-width: 72%;
+      opacity: 0; transform: translateY(20px);
+      animation: rise 1.1s ease 0.5s forwards;
+    }
+    .hero-title em { font-style: normal; color: var(--amber); }
+    .hero-aside {
+      position: absolute; right: 48px; bottom: 72px; text-align: right; z-index: 1;
+      opacity: 0; animation: rise 1s ease 0.8s forwards;
+    }
+    .hero-aside p {
+      font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--muted); line-height: 2.2;
+    }
+    .hero-scroll {
+      position: absolute; bottom: 72px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 1;
+    }
+    .hero-scroll span { font-size: 8px; letter-spacing: 0.45em; text-transform: uppercase; color: var(--muted); }
+    .scroll-line {
+      width: 1px; height: 56px;
+      background: linear-gradient(to bottom, var(--muted), transparent);
+      animation: pulse-line 2.4s ease-in-out infinite;
+    }
+    @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-line { 0%,100%{opacity:0.3} 50%{opacity:0.9} }
+
+    /* ── Works ── */
+    #works { position: relative; }
+    .works-header {
+      padding: 80px 48px 36px;
+      border-bottom: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .works-header h2 {
+      font-family: var(--I); font-size: clamp(44px, 7vw, 88px);
+      letter-spacing: 0.04em; color: var(--cream);
+    }
+    .filter-nav { display: flex; gap: 28px; }
+    .filter-nav button {
+      font-family: var(--M); font-size: 9px; letter-spacing: 0.3em;
+      text-transform: uppercase; background: none; border: none;
+      color: var(--muted); cursor: none; padding: 0; transition: color 0.3s;
+    }
+    .filter-nav button.active, .filter-nav button:hover { color: var(--cream); }
+
+    /* ── Slideshow ── */
+    .slideshow {
+      position: relative;
+      height: 78vh;
+      max-width: 1280px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    .slide {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      padding: 36px 48px 84px;
+      gap: 14px;
+      opacity: 0; transition: opacity 0.9s ease;
+      pointer-events: none;
+    }
+    .slide.active { opacity: 1; pointer-events: auto; }
+
+    .slide-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      flex: 0 0 auto;
+    }
+    .meta-year { font-size: 13px; letter-spacing: 0.2em; color: var(--cream); margin-bottom: 3px; }
+    .meta-role { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
+
+    .slide-credits { text-align: right; }
+    .slide-credits p {
+      font-size: 8.5px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: rgba(240,236,227,0.3); line-height: 1.9;
+    }
+    .slide-credits strong { color: rgba(240,236,227,0.65); font-weight: 400; }
+
+    /* Media area */
+    .slide-media {
+      flex: 1; min-height: 0;
+      position: relative; overflow: hidden;
+    }
+    .slide-img {
+      width: 100%; height: calc(100% - 72px);
+      object-fit: cover; display: block;
+      background: #111;
+      transition: transform 0.7s ease;
+    }
+    .slide.active:hover .slide-img { transform: scale(1.015); }
+
+    .play-btn {
+      position: absolute; top: calc(50% - 36px); left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px; height: 60px;
+      border: 1px solid rgba(240,236,227,0.45);
+      border-radius: 50%;
+      background: rgba(7,7,7,0.55);
+      backdrop-filter: blur(6px);
+      cursor: none; transition: all 0.3s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .play-btn::after {
+      content: ''; width: 0; height: 0; margin-left: 4px;
+      border-style: solid; border-width: 7px 0 7px 14px;
+      border-color: transparent transparent transparent var(--cream);
+    }
+    .play-btn:hover { border-color: var(--amber); background: rgba(200,164,106,0.15); }
+
+    /* Film strip */
+    .film-strip {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 64px; display: flex; gap: 3px;
+    }
+    .strip-frame {
+      flex: 1; overflow: hidden; opacity: 0.45; transition: opacity 0.3s; cursor: none;
+    }
+    .strip-frame.active, .strip-frame:hover { opacity: 1; }
+    .strip-frame img {
+      width: 100%; height: 100%; object-fit: cover; display: block; background: #1a1a1a;
+    }
+
+    /* Slide bottom */
+    .slide-bottom {
+      flex: 0 0 auto;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      border-top: 1px solid var(--line); padding-top: 14px;
+    }
+    .slide-artist { font-size: 9px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--amber); margin-bottom: 5px; }
+    .slide-title { font-family: var(--F); font-size: 26px; font-weight: 300; font-style: italic; }
+    .slide-label-name { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); text-align: right; }
+    .slide-label-val { font-size: 11px; letter-spacing: 0.15em; text-align: right; margin-top: 3px; }
+
+    /* Controls bar */
+    .slide-controls {
+      position: absolute; bottom: 0; left: 48px; right: 48px;
+      height: 60px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-top: 1px solid var(--line); z-index: 10;
+    }
+    .slide-num { font-family: var(--I); font-size: 20px; letter-spacing: 0.08em; color: var(--muted); }
+    .dots { display: flex; gap: 7px; align-items: center; }
+    .dot {
+      width: 4px; height: 4px; border-radius: 50%;
+      background: rgba(240,236,227,0.25); cursor: none; transition: all 0.35s;
+    }
+    .dot.active { background: var(--cream); width: 18px; border-radius: 2px; }
+    .arrows { display: flex; gap: 10px; }
+    .arr {
+      width: 38px; height: 38px;
+      border: 1px solid rgba(240,236,227,0.18);
+      background: none; color: var(--cream); cursor: none;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; transition: all 0.3s;
+    }
+    .arr:hover { border-color: var(--amber); color: var(--amber); }
+
+    /* ── About ── */
+    #about {
+      padding: 120px 48px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+      border-top: 1px solid var(--line);
+    }
+    .about-h {
+      font-family: var(--F); font-size: clamp(40px,5.5vw,76px);
+      font-weight: 300; font-style: italic; line-height: 1.05; margin-bottom: 36px;
+    }
+    .about-h em { font-style: normal; color: var(--amber); }
+    .about-body {
+      font-size: 11px; letter-spacing: 0.08em; line-height: 2.1;
+      color: rgba(240,236,227,0.55); font-weight: 300; max-width: 460px;
+    }
+    .services { list-style: none; padding-top: 10px; }
+    .services li {
+      padding: 18px 0; border-bottom: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .svc-name { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; }
+    .svc-n { font-size: 9px; color: rgba(240,236,227,0.25); letter-spacing: 0.2em; }
+
+    /* ── Contact ── */
+    #contact {
+      padding: 80px 48px 120px;
+      border-top: 1px solid var(--line);
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: end;
+    }
+    .contact-h {
+      font-family: var(--I); font-size: clamp(52px, 9vw, 130px);
+      letter-spacing: 0.02em; line-height: 0.88;
+    }
+    .contact-h em { color: var(--amber); font-style: normal; }
+    .contact-items { display: flex; flex-direction: column; gap: 28px; }
+    .c-label { display: block; font-size: 8px; letter-spacing: 0.45em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+    .c-val { font-size: 14px; letter-spacing: 0.08em; color: var(--cream); text-decoration: none; transition: color 0.3s; }
+    a.c-val:hover { color: var(--amber); }
+    .socials {
+      display: flex; gap: 24px; flex-wrap: wrap;
+      margin-top: 36px; padding-top: 36px; border-top: 1px solid var(--line);
+    }
+    .socials a {
+      font-size: 8.5px; letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--muted); text-decoration: none; transition: color 0.3s;
+    }
+    .socials a:hover { color: var(--cream); }
+
+    /* ── Footer ── */
+    footer {
+      padding: 22px 48px; border-top: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    footer p { font-size: 8px; letter-spacing: 0.25em; color: rgba(240,236,227,0.2); }
+
+    /* ── Modal ── */
+    #modal {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(7,7,7,0.93);
+      backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center;
+    }
+    #modal.open { display: flex; }
+    .modal-inner {
+      width: 100vw; height: 100vh;
+      max-width: none; position: relative;
+    }
+    .modal-inner iframe { width: 100%; height: 100%; border: none; }
+    #modal-close {
+      position: fixed; top: 20px; right: 28px;
+      background: none; border: none; cursor: none;
+      color: var(--muted); font-family: var(--M); font-size: 9px;
+      letter-spacing: 0.4em; text-transform: uppercase; padding: 6px 0;
+      transition: color 0.3s; z-index: 2100;
+    }
+    #modal-close:hover { color: var(--cream); }
+
+    /* ── Fade-up ── */
+    .fu { opacity: 0; transform: translateY(18px); transition: opacity 0.85s ease, transform 0.85s ease; }
+    .fu.vis { opacity: 1; transform: translateY(0); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      nav, nav::after { padding-left: 24px; padding-right: 24px; }
+      nav::after { left: 24px; right: 24px; }
+      .nav-links { gap: 20px; }
+      #hero { padding: 0 24px 56px; }
+      .hero-title { max-width: 100%; font-size: clamp(48px, 13vw, 88px); }
+      .hero-aside { display: none; }
+      .works-header { padding: 48px 24px 24px; flex-direction: column; gap: 20px; }
+      .slide { padding: 24px 24px 74px; }
+      .slide-controls { left: 24px; right: 24px; }
+      #about, #contact { grid-template-columns: 1fr; gap: 48px; padding: 64px 24px; }
+      footer { flex-direction: column; gap: 8px; padding: 20px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-r"></div>
+<div id="grain"></div>
+
+<!-- ── Nav ── -->
+<nav>
+  <a href="#" class="nav-logo">Medium Well Production</a>
+  <ul class="nav-links">
+    <li><a href="#works">Work</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ── Hero ── -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <p class="hero-label">Bangkok — Production Team</p>
+    <h1 class="hero-title">Raw<br><em>Energy</em><br>Refined<br>Craft</h1>
+  </div>
+  <div class="hero-aside">
+    <p>Music Video Production</p>
+    <p>Direction &amp; Camera</p>
+    <p>Edit &amp; Color Grade</p>
+    <p>TikTok Content</p>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- ── Works ── -->
+<section id="works">
+  <div class="works-header">
+    <h2>Selected Works</h2>
+    <div class="filter-nav">
+      <button class="active" data-filter="all">All</button>
+      <button data-filter="production">Production</button>
+      <button data-filter="direction">Direction</button>
+      <button data-filter="camera">Camera</button>
+      <button data-filter="edit">Edit &amp; Color</button>
+    </div>
+  </div>
+
+  <div class="slideshow" id="slideshow">
+
+    <!-- ─ Slide 01 ─ -->
+    <div class="slide active" data-cat="production">
+      <div class="slide-top">
+        <div>
+          <div class="meta-year">2024</div>
+          <div class="meta-role">Producer / Medium Well Production</div>
+        </div>
+        <div class="slide-credits">
+          <p>PRODUCER <strong>MEDIUM WELL PRODUCTION</strong></p>
+          <p>DIRECTOR <strong>—</strong></p>
+          <p>DOP <strong>—</strong></p>
+          <p>EDITOR <strong>—</strong></p>
+          <p>COLORIST <strong>—</strong></p>
+        </div>
+      </div>
+      <div class="slide-media">
+        <!-- Replace 4uZi27I_Ruw with actual YouTube ID, e.g. dQw4w9WgXcQ -->
+        <img class="slide-img" src="https://img.youtube.com/vi/4uZi27I_Ruw/maxresdefault.jpg" alt="Better With You — Fluke" onerror="this.style.background='#1a0f0a'">
+        <button class="play-btn" onclick="openModal('4uZi27I_Ruw')"></button>
+        <div class="film-strip">
+          <div class="strip-frame active"><img src="https://img.youtube.com/vi/4uZi27I_Ruw/1.jpg" alt="" onerror="this.style.background='#161010'"></div>
+          <div class="strip-frame"><img src="https://img.youtube.com/vi/4uZi27I_Ruw/2.jpg" alt="" onerror="this.style.background='#161010'"></div>
+          <div class="strip-frame"><img src="https://img.youtube.com/vi/4uZi27I_Ruw/3.jpg" alt="" onerror="this.style.background='#161010'"></div>
+          <div class="strip-frame"><img src="https://img.youtube.com/vi/4uZi27I_Ruw/0.jpg" alt="" onerror="this.style.background='#161010'"></div>
+        </div>
+      </div>
+      <div class="slide-bottom">
+        <div>
+          <div class="slide-artist">Fluke</div>
+          <div class="slide-title">"จะให้ไปรักใคร (Better With You)"</div>
+        </div>
+        <div>
+          <div class="slide-label-name">Role</div>
+          <div class="slide-label-val">Production</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─ Slide 02 ─ -->
+    <div class="slide" data-cat="production">
+      <div class="slide-top">
+        <div>
+          <div class="meta-year">2024</div>
+          <div class="meta-role">Production / Official Visualizer</div>
+        </div>
+        <div class="slide-credits">
+          <p>PRODUCER <strong>MEDIUM WELL PRODUCTION</strong></p>
+          <p>DIRECTOR <strong>—</strong></p>
+          <p>DOP <strong>—</strong></p>
+          <p>EDITOR <strong>—</strong></p>
+          <p>COLORIST <strong>—</strong></p>
+        </div>
+      </div>
+      <div class="slide-media">
+        <!-- Replace S8mOWlDOBQE -->
+        <img class="slide-img" src="https://img.youtube.com/vi/S8mOWlDOBQE/maxresdefault.jpg" alt="WRU — Pearprapa" onerror="this.style.background='#0a0a1a'">
+        <button class="play-btn" onclick="openModal('S8mOWlDOBQE')"></button>
+        <div class="film-strip">
+          <div class="strip-frame active"><img src="https://img.youtube.com/vi/S8mOWlDOBQE/1.jpg" alt="" onerror="this.style.background='#101016'"></div>
+          <div class="strip-frame"><img src="https://img.youtube.com/vi/S8mOWlDOBQE/2.jpg" alt="" onerror="this.style.background='#101016'"></div>
+          <div class="strip-frame"><img src="https://img.youtube.com/vi/S8mOWlDOBQE/3.jpg" alt="" onerror="this.style.background='#101016'"></div>
+          <div class="strip-frame"><img src="https://img.youtube.com/vi/S8mOWlDOBQE/0.jpg" alt="" onerror="this.style.background='#101016'"></div>
+        </div>
+      </div>
+      <div class="slide-bottom">
+        <div>
+          <div class="slide-artist">Pearprapa</div>
+          <div class="slide-title">"WRU [Official Visualizer]"</div>
+        </div>
+        <div>
+          <div class="slide-label-name">Role</div>
+          <div class="slide-label-val">Production</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─ Slide 03 ─ -->
+    <div class="slide" data-cat="direction">
+      <div class="slide-top">
+        <div>
+          <div class="meta-year">2024</div>
+          <div class="meta-role">Director / Performance</div>
+        </div>
+        <div class="slide-credits">
+          <p>SERIES <strong>ALALA หาเพื่อน</strong></p>
+          <p>PLATFORM <strong>TIKTOK</strong></p>
+          <p>PRODUCTION <strong>MEDIUM WELL PRODUCTION</strong></p>
+          <p>ARTISTS <strong>LISA COVER · TYLA · KATSEYE</strong></p>
+        </div>
+      </div>
+      <div class="slide-media">
+        <!-- TikTok embed area -->
+        <div style="width:100%;height:calc(100% - 72px);background:linear-gradient(135deg,#0f0810,#1a0a1f,#0a080f);display:flex;align-items:center;justify-content:center;overflow:hidden;gap:12px;" id="alala-embeds">
+          <iframe id="tt-1" src="https://www.tiktok.com/embed/v2/7581762778944392469" style="width:22%;height:95%;border:none;border-radius:4px;opacity:1;transition:opacity 0.3s;" allow="autoplay"></iframe>
+          <iframe id="tt-2" src="https://www.tiktok.com/embed/v2/7582841132728765716" style="width:22%;height:95%;border:none;border-radius:4px;opacity:0.45;transition:opacity 0.3s;" allow="autoplay"></iframe>
+          <iframe id="tt-3" src="https://www.tiktok.com/embed/v2/7583942691550006548" style="width:22%;height:95%;border:none;border-radius:4px;opacity:0.45;transition:opacity 0.3s;" allow="autoplay"></iframe>
+          <iframe id="tt-4" src="https://www.tiktok.com/embed/v2/7585429921502219541" style="width:22%;height:95%;border:none;border-radius:4px;opacity:0.45;transition:opacity 0.3s;" allow="autoplay"></iframe>
+        </div>
+        <div class="film-strip">
+          <div class="strip-frame active" onclick="focusTT(1)" style="background:#1a0a1f;display:flex;align-items:center;justify-content:center;font-family:var(--M);font-size:9px;letter-spacing:0.2em;color:rgba(240,236,227,0.6);">EP.01</div>
+          <div class="strip-frame" onclick="focusTT(2)" style="background:#15081a;display:flex;align-items:center;justify-content:center;font-family:var(--M);font-size:9px;letter-spacing:0.2em;color:rgba(240,236,227,0.6);">EP.02</div>
+          <div class="strip-frame" onclick="focusTT(3)" style="background:#120614;display:flex;align-items:center;justify-content:center;font-family:var(--M);font-size:9px;letter-spacing:0.2em;color:rgba(240,236,227,0.6);">EP.03</div>
+          <div class="strip-frame" onclick="focusTT(4)" style="background:#1a0a1f;display:flex;align-items:center;justify-content:center;font-family:var(--M);font-size:9px;letter-spacing:0.2em;color:rgba(240,236,227,0.6);">EP.04</div>
+        </div>
+      </div>
+      <div class="slide-bottom">
+        <div>
+          <div class="slide-artist">ALALA หาเพื่อน</div>
+          <div class="slide-title">"Performance Content Series"</div>
+        </div>
+        <div>
+          <div class="slide-label-name">Platform</div>
+          <div class="slide-label-val">TikTok</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─ Controls ─ -->
+    <div class="slide-controls">
+      <div class="slide-num" id="snum">01</div>
+      <div class="dots" id="dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div class="arrows">
+        <button class="arr" id="prev">←</button>
+        <button class="arr" id="next">→</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── About ── -->
+<section id="about">
+  <div class="fu">
+    <h2 class="about-h">Bangkok<br>Based<br><em>Creatives</em></h2>
+    <p class="about-body">
+      Medium Well Production is a Bangkok-based creative production team
+      built on raw energy and refined craft. From music video production
+      and direction to camera work, editing, and color grading — we bring
+      every frame to life with precision and passion.
+    </p>
+  </div>
+  <div class="fu" style="transition-delay:0.18s">
+    <ul class="services">
+      <li><span class="svc-name">Music Video Production</span><span class="svc-n">01</span></li>
+      <li><span class="svc-name">Direction &amp; AD</span><span class="svc-n">02</span></li>
+      <li><span class="svc-name">Camera &amp; Cinematography</span><span class="svc-n">03</span></li>
+      <li><span class="svc-name">Edit &amp; Color Grade</span><span class="svc-n">04</span></li>
+      <li><span class="svc-name">TikTok Content</span><span class="svc-n">05</span></li>
+      <li><span class="svc-name">Performance Capture</span><span class="svc-n">06</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ── Contact ── -->
+<section id="contact">
+  <div class="fu">
+    <h2 class="contact-h">LET'S<br>MAKE<br><em>SOMETHING</em></h2>
+  </div>
+  <div class="fu" style="transition-delay:0.15s">
+    <div class="contact-items">
+      <div>
+        <span class="c-label">Email</span>
+        <a href="mailto:medium.wellp@gmail.com" class="c-val">medium.wellp@gmail.com</a>
+      </div>
+      <div>
+        <span class="c-label">Phone</span>
+        <span class="c-val">087 375 4455 / 094 251 8368</span>
+      </div>
+    </div>
+    <div class="socials">
+      <a href="https://instagram.com/mediumwell.production" target="_blank">Instagram</a>
+      <a href="https://tiktok.com/@medium.wellp" target="_blank">TikTok</a>
+      <a href="https://facebook.com/61585152555089" target="_blank">Facebook</a>
+      <a href="https://linktr.ee/mediumwellproduciton" target="_blank">Linktree</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <p>© 2024 Medium Well Production</p>
+  <p>Raw Energy. Refined Craft.</p>
+  <p>Bangkok, Thailand</p>
+</footer>
+
+<!-- ── Modal ── -->
+<div id="modal" onclick="handleModalClick(event)">
+  <div class="modal-inner">
+    <button id="modal-close" onclick="closeModal()">✕ &nbsp;Close</button>
+    <div id="modal-frame"></div>
+  </div>
+</div>
+
+<script>
+  /* ── Cursor ── */
+  const cur = document.getElementById('cur');
+  const curR = document.getElementById('cur-r');
+  let mx = 0, my = 0;
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+    setTimeout(() => { curR.style.left = mx + 'px'; curR.style.top = my + 'px'; }, 65);
+  });
+  document.querySelectorAll('a, button, .strip-frame, .dot').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cur.style.transform = 'translate(-50%,-50%) scale(2.8)';
+      curR.style.transform = 'translate(-50%,-50%) scale(1.6)';
+    });
+    el.addEventListener('mouseleave', () => {
+      cur.style.transform = 'translate(-50%,-50%) scale(1)';
+      curR.style.transform = 'translate(-50%,-50%) scale(1)';
+    });
+  });
+
+  /* ── Slideshow ── */
+  const slides = [...document.querySelectorAll('#slideshow .slide')];
+  const dots   = [...document.querySelectorAll('#dots .dot')];
+  const snum   = document.getElementById('snum');
+  let cur_i = 0;
+
+  function goTo(i) {
+    slides[cur_i].classList.remove('active');
+    dots[cur_i].classList.remove('active');
+    cur_i = ((i % slides.length) + slides.length) % slides.length;
+    slides[cur_i].classList.add('active');
+    dots[cur_i].classList.add('active');
+    snum.textContent = String(cur_i + 1).padStart(2, '0');
+  }
+
+  document.getElementById('prev').addEventListener('click', () => goTo(cur_i - 1));
+  document.getElementById('next').addEventListener('click', () => goTo(cur_i + 1));
+  dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') goTo(cur_i + 1);
+    if (e.key === 'ArrowLeft')  goTo(cur_i - 1);
+    if (e.key === 'Escape')     closeModal();
+  });
+
+  /* ── Filter ── */
+  document.querySelectorAll('.filter-nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-nav button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const f = btn.dataset.filter;
+      const pool = f === 'all' ? slides : slides.filter(s => s.dataset.cat === f);
+      if (pool.length) goTo(slides.indexOf(pool[0]));
+    });
+  });
+
+  /* ── Modal ── */
+  function openModal(id) {
+    if (!id || id.includes('_VIDEO_ID') || id.includes('_ID')) {
+      alert('⚠️  กรุณาใส่ YouTube Video ID ให้ถูกต้องในไฟล์ index.html');
+      return;
+    }
+    document.getElementById('modal-frame').innerHTML =
+      `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" frameborder="0"
+       allow="autoplay;encrypted-media" allowfullscreen style="width:100%;height:100%"></iframe>`;
+    document.getElementById('modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    document.getElementById('modal-frame').innerHTML = '';
+    document.body.style.overflow = '';
+  }
+  function handleModalClick(e) {
+    if (e.target === document.getElementById('modal')) closeModal();
+  }
+
+  /* ── TikTok focus ── */
+  function focusTT(n) {
+    for (let i = 1; i <= 4; i++) {
+      const fr = document.getElementById('tt-' + i);
+      if (fr) fr.style.opacity = i === n ? '1' : '0.45';
+    }
+    document.querySelectorAll('#slideshow .slide[data-cat="direction"] .strip-frame').forEach((f, i) => {
+      f.classList.toggle('active', i + 1 === n);
+    });
+  }
+
+  /* ── Fade-up on scroll ── */
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => { if (en.isIntersecting) en.target.classList.add('vis'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fu').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
