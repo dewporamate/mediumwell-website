@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medium Well Production</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Fraunces:opsz,ital,wght@9..144,0,300;9..144,1,300;9..144,1,400&family=Fira+Code:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:    #080808;
+      --bg2:   #0f0f0f;
+      --fg:    #EDE9E0;
+      --lime:  #FF2D78;
+      --muted: rgba(237,233,224,0.38);
+      --line:  rgba(237,233,224,0.08);
+      --F: 'Fraunces', serif;
+      --U: 'Unbounded', sans-serif;
+      --M: 'Fira Code', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--M);
+      overflow-x: hidden;
+    }
+
+    /* ── Grain ── */
+    #grain {
+      position: fixed; inset: -50%; width: 200%; height: 200%;
+      pointer-events: none; z-index: 200; opacity: 0.038;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+      animation: grain .4s steps(1) infinite;
+      will-change: transform;
+    }
+    @keyframes grain {
+      0%  { transform:translate(0,0);   } 20% { transform:translate(-3%,2%);  }
+      40% { transform:translate(2%,-3%);} 60% { transform:translate(-2%,3%); }
+      80% { transform:translate(3%,-2%);} 100%{ transform:translate(-1%,1%); }
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 48px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8,8,8,0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .nav-logo {
+      font-family: var(--U); font-size: 12px; font-weight: 900;
+      letter-spacing: 0.05em; color: var(--fg); text-decoration: none;
+    }
+    .nav-logo span { color: var(--lime); }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a {
+      font-family: var(--M); font-size: 9px; font-weight: 300;
+      letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--muted); text-decoration: none; transition: color .3s;
+    }
+    .nav-links a:hover { color: var(--lime); }
+    .nav-tag {
+      font-family: var(--M); font-size: 8px; font-weight: 300;
+      letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--muted); border: 1px solid var(--line); padding: 5px 12px;
+    }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      padding: 0 48px; position: relative; overflow: hidden;
+    }
+    .hero-top {
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: flex-end; padding-bottom: 28px; padding-top: 130px;
+    }
+    .hero-eyebrow {
+      font-family: var(--M); font-size: 9px; font-weight: 300;
+      letter-spacing: 0.5em; text-transform: uppercase;
+      color: var(--lime); margin-bottom: 22px;
+    }
+    .hero-title {
+      font-family: var(--U);
+      font-size: clamp(58px, 10vw, 148px);
+      font-weight: 900; line-height: 0.88; letter-spacing: -0.025em;
+    }
+    /* overflow hidden only when JS/GSAP is ready (class added by JS) */
+    .js-ready .hero-line { overflow: hidden; }
+    .hero-line { display: block; color: var(--fg); }
+    .hero-line.is-lime { color: var(--lime); }
+    .hero-line .char { display: inline-block; will-change: transform; }
+    .hero-sub {
+      font-family: var(--F); font-style: italic; font-weight: 300;
+      font-size: clamp(18px, 2.2vw, 30px);
+      color: var(--muted); margin-top: 28px;
+    }
+    .hero-meta {
+      position: absolute; right: 48px; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 7px; text-align: right;
+    }
+    .hero-meta span {
+      font-family: var(--M); font-size: 8px;
+      letter-spacing: 0.35em; text-transform: uppercase; color: var(--muted);
+    }
+    .hero-scroll-ind {
+      display: flex; align-items: center; gap: 16px; padding: 18px 0;
+    }
+    .h-scroll-line { width: 52px; height: 1px; background: linear-gradient(to right, var(--lime), transparent); }
+    .h-scroll-label { font-family: var(--M); font-size: 8px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--muted); }
+
+    /* Marquee */
+    .ticker { overflow: hidden; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 13px 0; white-space: nowrap; }
+    .ticker-track { display: inline-block; animation: marquee 24s linear infinite; }
+    .ticker:hover .ticker-track { animation-play-state: paused; }
+    .ticker-track span { font-family: var(--U); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 0 36px; }
+    .ticker-track span.t-accent { color: var(--lime); padding: 0 18px; }
+    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* ── WORKS ── */
+    #works { border-top: 1px solid var(--line); }
+    .section-header { padding: 64px 48px 36px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line); }
+    .section-title { font-family: var(--U); font-size: clamp(36px, 5.5vw, 72px); font-weight: 900; letter-spacing: -0.025em; line-height: 1.0; color: var(--fg); }
+    .section-count { font-family: var(--M); font-size: 10px; font-weight: 300; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
+
+    /* Accordion */
+    .project-row { border-bottom: 1px solid var(--line); }
+    .project-header {
+      display: grid; grid-template-columns: 80px 1fr auto auto 48px;
+      align-items: center; gap: 16px; padding: 28px 48px;
+      transition: background .25s; cursor: pointer;
+    }
+    .project-header:hover { background: var(--bg2); }
+    .project-num { font-family: var(--U); font-size: 13px; font-weight: 700; color: var(--lime); letter-spacing: 0.04em; }
+    .project-artist { font-family: var(--M); font-size: 8px; font-weight: 300; letter-spacing: 0.35em; text-transform: uppercase; color: var(--lime); margin-bottom: 6px; }
+    .project-title { font-family: var(--F); font-size: clamp(16px, 1.9vw, 25px); font-weight: 300; font-style: italic; color: var(--fg); }
+    .project-tag { font-family: var(--M); font-size: 8px; font-weight: 300; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); padding: 5px 12px; }
+    .project-year { font-family: var(--M); font-size: 11px; font-weight: 300; letter-spacing: 0.12em; color: var(--muted); }
+    .project-toggle {
+      width: 36px; height: 36px; border: 1px solid var(--line); background: none; color: var(--fg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 300; line-height: 1;
+      transition: background .3s, border-color .3s, color .3s; flex-shrink: 0;
+    }
+    .project-row.open .project-toggle { background: var(--lime); border-color: var(--lime); color: var(--bg); }
+    .project-toggle span { display: block; transition: transform .4s cubic-bezier(.16,1,.3,1); line-height: 1; }
+    .project-row.open .project-toggle span { transform: rotate(45deg); }
+    .project-body { height: 0; overflow: hidden; }
+    .project-inner { padding: 0 48px 52px; display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }
+
+    /* Embed */
+    .project-embed { background: #111; overflow: hidden; position: relative; }
+    .embed-yt { aspect-ratio: 16/9; }
+    .embed-yt img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .embed-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.28); transition: background .3s; }
+    .embed-play:hover { background: rgba(0,0,0,0.1); }
+    .play-circle { width: 64px; height: 64px; border: 1px solid rgba(255,45,120,0.55); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .3s; }
+    .embed-play:hover .play-circle { background: var(--lime); border-color: var(--lime); }
+    .play-circle::after { content: ''; margin-left: 5px; border-style: solid; border-width: 9px 0 9px 16px; border-color: transparent transparent transparent var(--fg); transition: border-color .3s; }
+    .embed-play:hover .play-circle::after { border-color: transparent transparent transparent var(--bg); }
+    .tt-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .tt-card {
+      position: relative; aspect-ratio: 9/16; background: #0d0d0d;
+      overflow: hidden; cursor: pointer; display: block; text-decoration: none;
+      border: 1px solid var(--line);
+    }
+    .tt-card::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.25) 45%, transparent 75%);
+      z-index: 1; transition: opacity .3s;
+    }
+    .tt-card:hover::after { opacity: 0.7; }
+    .tt-card-ep {
+      position: absolute; top: 14px; left: 14px; z-index: 3;
+      font-family: var(--U); font-size: 9px; font-weight: 700;
+      color: var(--lime); letter-spacing: 0.12em;
+    }
+    .tt-card-tiktok {
+      position: absolute; top: 12px; right: 14px; z-index: 3;
+      width: 18px; height: 18px; opacity: 0.5;
+    }
+    .tt-card-play {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(1);
+      z-index: 3; width: 52px; height: 52px;
+      border: 1px solid rgba(255,45,120,0.5); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .3s cubic-bezier(.16,1,.3,1);
+    }
+    .tt-card:hover .tt-card-play { background: var(--lime); border-color: var(--lime); transform: translate(-50%,-50%) scale(1.08); }
+    .tt-card-play::before {
+      content: ''; margin-left: 4px;
+      border-style: solid; border-width: 8px 0 8px 14px;
+      border-color: transparent transparent transparent rgba(255,45,120,0.85);
+      transition: border-color .3s;
+    }
+    .tt-card:hover .tt-card-play::before { border-color: transparent transparent transparent #080808; }
+    .tt-card-info { position: absolute; bottom: 0; left: 0; right: 0; z-index: 3; padding: 14px; }
+    .tt-card-label {
+      font-family: var(--M); font-size: 7px; font-weight: 300;
+      letter-spacing: 0.35em; text-transform: uppercase; color: var(--lime); margin-bottom: 5px;
+    }
+    .tt-card-title {
+      font-family: var(--M); font-size: 9px; font-weight: 400;
+      letter-spacing: 0.04em; color: var(--fg); line-height: 1.55;
+    }
+    .tt-card-bar {
+      position: absolute; bottom: 0; left: 0; height: 2px; width: 0;
+      background: var(--lime); z-index: 4; transition: width .4s ease;
+    }
+    .tt-card:hover .tt-card-bar { width: 100%; }
+    .tt-card-bg {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; object-position: center top;
+      filter: brightness(0.6); transition: transform .5s ease, filter .3s;
+      z-index: 0;
+    }
+    .tt-card:hover .tt-card-bg { transform: scale(1.04); filter: brightness(0.45); }
+
+    /* Credits */
+    .credits-label { font-family: var(--M); font-size: 8px; font-weight: 300; letter-spacing: 0.42em; text-transform: uppercase; color: var(--lime); margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+    .credit-line { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+    .cr-role { font-family: var(--M); font-size: 8px; font-weight: 300; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+    .cr-name { font-family: var(--M); font-size: 9px; font-weight: 400; letter-spacing: 0.08em; color: var(--fg); text-align: right; }
+    .credit-meta { margin-top: 20px; }
+    .credit-meta + .credit-meta { margin-top: 14px; }
+    .cm-label { font-family: var(--M); font-size: 8px; font-weight: 300; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+    .cm-val { font-family: var(--M); font-size: 11px; font-weight: 400; letter-spacing: 0.08em; color: var(--fg); }
+
+    /* ── ABOUT ── */
+    #about { border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; }
+    .about-left { padding: 80px 48px; border-right: 1px solid var(--line); }
+    .about-tag { display: block; font-family: var(--M); font-size: 8px; font-weight: 300; letter-spacing: 0.45em; text-transform: uppercase; color: var(--lime); margin-bottom: 36px; }
+    .about-heading { font-family: var(--U); font-size: clamp(34px, 4.8vw, 66px); font-weight: 900; letter-spacing: -0.025em; line-height: 1.0; margin-bottom: 32px; }
+    .about-heading em { font-style: normal; color: var(--lime); }
+    .about-desc { font-family: var(--M); font-size: 11px; font-weight: 300; letter-spacing: 0.06em; line-height: 2.0; color: rgba(237,233,224,0.52); max-width: 440px; }
+    .about-right { padding: 80px 48px; }
+    .services-list { list-style: none; }
+    .services-list li { display: grid; grid-template-columns: 44px 1fr 20px; align-items: center; gap: 16px; padding: 19px 0; border-bottom: 1px solid var(--line); }
+    .svc-num { font-family: var(--U); font-size: 10px; font-weight: 700; color: var(--lime); }
+    .svc-name { font-family: var(--M); font-size: 10px; font-weight: 300; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg); }
+    .svc-arr { font-size: 13px; color: var(--muted); transition: transform .3s, color .3s; }
+    .services-list li:hover .svc-arr { transform: translateX(4px); color: var(--lime); }
+
+    /* Stats */
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .stat { padding: 36px 48px; border-right: 1px solid var(--line); }
+    .stat:last-child { border-right: none; }
+    .stat-num { font-family: var(--U); font-size: clamp(36px, 4vw, 58px); font-weight: 900; color: var(--fg); letter-spacing: -0.03em; line-height: 1; }
+    .stat-num sup { color: var(--lime); font-size: 0.5em; vertical-align: super; }
+    .stat-label { display: block; font-family: var(--M); font-size: 8px; font-weight: 300; letter-spacing: 0.35em; text-transform: uppercase; color: var(--muted); margin-top: 8px; }
+
+    /* ── CONTACT ── */
+    #contact { border-top: 1px solid var(--line); padding: 80px 48px 100px; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: end; }
+    .contact-heading { font-family: var(--U); font-size: clamp(52px, 9vw, 128px); font-weight: 900; letter-spacing: -0.03em; line-height: 0.87; }
+    .contact-heading em { color: var(--lime); font-style: normal; }
+    .contact-line { margin-bottom: 32px; }
+    .c-label { display: block; font-family: var(--M); font-size: 8px; font-weight: 300; letter-spacing: 0.45em; text-transform: uppercase; color: var(--lime); margin-bottom: 8px; }
+    .c-val { font-family: var(--M); font-size: 13px; letter-spacing: 0.08em; color: var(--fg); text-decoration: none; transition: color .3s; }
+    a.c-val:hover { color: var(--lime); }
+    .social-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--line); }
+    .social-link { font-family: var(--M); font-size: 8px; font-weight: 300; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); text-decoration: none; padding: 8px 16px; border: 1px solid var(--line); transition: all .3s; }
+    .social-link:hover { color: var(--bg); background: var(--lime); border-color: var(--lime); }
+
+    /* ── FOOTER ── */
+    footer { border-top: 1px solid var(--line); padding: 20px 48px; display: flex; justify-content: space-between; align-items: center; }
+    footer p { font-family: var(--M); font-size: 8px; font-weight: 300; letter-spacing: 0.2em; color: rgba(237,233,224,0.2); }
+    .footer-brand { font-family: var(--M); font-size: 8px; font-weight: 400; letter-spacing: 0.25em; text-transform: uppercase; color: var(--lime); }
+
+    /* ── MODAL ── */
+    #modal {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(4,4,4,0.95);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      display: none; align-items: center; justify-content: center;
+    }
+    #modal.open { display: flex; }
+    .modal-inner { width: 90vw; max-width: 1200px; aspect-ratio: 16/9; position: relative; }
+    #modal-frame { width: 100%; height: 100%; }
+    .modal-inner iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+    #modal-close {
+      position: fixed; top: 20px; right: 28px;
+      background: none; border: 1px solid var(--line);
+      color: var(--muted); font-family: var(--M); font-size: 8px;
+      letter-spacing: 0.4em; text-transform: uppercase; padding: 8px 16px;
+      transition: all .3s; z-index: 2100;
+    }
+    #modal-close:hover { color: var(--lime); border-color: var(--lime); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      nav, footer { padding: 18px 24px; }
+      .nav-tag { display: none; }
+      .nav-links { gap: 20px; }
+      #hero { padding: 0 24px; }
+      .hero-meta { display: none; }
+      .section-header { padding: 44px 24px 20px; }
+      .project-header { padding: 20px 24px; grid-template-columns: 52px 1fr 36px; }
+      .project-tag, .project-year { display: none; }
+      .project-inner { padding: 0 24px 36px; grid-template-columns: 1fr; }
+      .tt-cards { grid-template-columns: repeat(2, 1fr); }
+      #about { grid-template-columns: 1fr; }
+      .about-left { border-right: none; border-bottom: 1px solid var(--line); padding: 48px 24px; }
+      .about-right { padding: 48px 24px; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .stat { padding: 24px; }
+      .stat:nth-child(2) { border-right: none; }
+      .stat:nth-child(3) { grid-column: span 2; border-top: 1px solid var(--line); }
+      #contact { grid-template-columns: 1fr; gap: 40px; padding: 48px 24px; }
+      footer { flex-direction: column; gap: 6px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="grain"></div>
+
+<nav>
+  <a href="#" class="nav-logo">MW<span>P</span></a>
+  <ul class="nav-links">
+    <li><a href="#works">Work</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-tag">Bangkok, TH</div>
+</nav>
+
+<section id="hero">
+  <div class="hero-top">
+    <p class="hero-eyebrow">Bangkok — Production Team — Est. 2024</p>
+    <h1 class="hero-title" aria-label="MEDIUM WELL">
+      <span class="hero-line">MEDIUM</span>
+      <span class="hero-line is-lime">WELL</span>
+    </h1>
+    <p class="hero-sub">Raw Energy. Refined Craft.</p>
+  </div>
+  <div class="hero-meta">
+    <span>Music Video Production</span>
+    <span>Direction &amp; Camera</span>
+    <span>Edit &amp; Color Grade</span>
+    <span>TikTok Content</span>
+  </div>
+  <div class="hero-scroll-ind">
+    <div class="h-scroll-line"></div>
+    <span class="h-scroll-label">Scroll</span>
+  </div>
+  <div class="ticker">
+    <div class="ticker-track">
+      <span>Music Video Production</span><span class="t-accent">✦</span>
+      <span>Direction &amp; AD</span><span class="t-accent">✦</span>
+      <span>Cinematography</span><span class="t-accent">✦</span>
+      <span>Edit &amp; Color Grade</span><span class="t-accent">✦</span>
+      <span>TikTok Content</span><span class="t-accent">✦</span>
+      <span>Performance Capture</span><span class="t-accent">✦</span>
+      <span>Music Video Production</span><span class="t-accent">✦</span>
+      <span>Direction &amp; AD</span><span class="t-accent">✦</span>
+      <span>Cinematography</span><span class="t-accent">✦</span>
+      <span>Edit &amp; Color Grade</span><span class="t-accent">✦</span>
+      <span>TikTok Content</span><span class="t-accent">✦</span>
+      <span>Performance Capture</span><span class="t-accent">✦</span>
+    </div>
+  </div>
+</section>
+
+<section id="works">
+  <div class="section-header">
+    <h2 class="section-title">Selected<br>Works</h2>
+    <span class="section-count">03 Projects</span>
+  </div>
+  <div class="projects-list">
+
+    <div class="project-row">
+      <div class="project-header">
+        <span class="project-num">01</span>
+        <div>
+          <div class="project-artist">Fluke</div>
+          <div class="project-title">"จะให้ไปรักใคร (Better With You)"</div>
+        </div>
+        <span class="project-tag">Production</span>
+        <span class="project-year">2025</span>
+        <button class="project-toggle"><span>+</span></button>
+      </div>
+      <div class="project-body">
+        <div class="project-inner">
+          <div class="project-embed embed-yt">
+            <img src="https://img.youtube.com/vi/4uZi27I_Ruw/maxresdefault.jpg" alt="Better With You — Fluke" onerror="this.style.background='#1a0f0a'">
+            <div class="embed-play" onclick="openModal('4uZi27I_Ruw')"><div class="play-circle"></div></div>
+          </div>
+          <div class="project-credits">
+            <div class="credits-label">Credits</div>
+            <div class="credit-line"><span class="cr-role">Director</span><span class="cr-name">VANVY</span></div>
+            <div class="credit-line"><span class="cr-role">Asst. Director</span><span class="cr-name">Saran Promthong</span></div>
+            <div class="credit-line"><span class="cr-role">DOP</span><span class="cr-name">Yellowteethh</span></div>
+            <div class="credit-line"><span class="cr-role">Focus Puller</span><span class="cr-name">Pakin Srilakum</span></div>
+            <div class="credit-line"><span class="cr-role">DIT</span><span class="cr-name">dew.poramate</span></div>
+            <div class="credit-line"><span class="cr-role">Art Director</span><span class="cr-name">Kirakorn I. / dew.poramate</span></div>
+            <div class="credit-line"><span class="cr-role">Editor</span><span class="cr-name">Wanchana</span></div>
+            <div class="credit-line"><span class="cr-role">Colorist</span><span class="cr-name">dew.poramate</span></div>
+            <div class="credit-meta"><div class="cm-label">Producer</div><div class="cm-val">Medium Well Production</div></div>
+            <div class="credit-meta"><div class="cm-label">Label</div><div class="cm-val">PROJEXT52</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="project-row">
+      <div class="project-header">
+        <span class="project-num">02</span>
+        <div>
+          <div class="project-artist">Pearprapa</div>
+          <div class="project-title">WRU</div>
+        </div>
+        <span class="project-tag">Production</span>
+        <span class="project-year">2024</span>
+        <button class="project-toggle"><span>+</span></button>
+      </div>
+      <div class="project-body">
+        <div class="project-inner">
+          <div class="project-embed embed-yt">
+            <img src="https://img.youtube.com/vi/S8mOWlDOBQE/maxresdefault.jpg" alt="WRU — Pearprapa" onerror="this.style.background='#0a0a1a'">
+            <div class="embed-play" onclick="openModal('S8mOWlDOBQE')"><div class="play-circle"></div></div>
+          </div>
+          <div class="project-credits">
+            <div class="credits-label">Credits</div>
+            <div class="credit-line"><span class="cr-role">DOP</span><span class="cr-name">Yellowteethh</span></div>
+            <div class="credit-line"><span class="cr-role">Focus Puller</span><span class="cr-name">dew.poramate</span></div>
+            <div class="credit-line"><span class="cr-role">Editor</span><span class="cr-name">dew.poramate</span></div>
+            <div class="credit-line"><span class="cr-role">Colorist</span><span class="cr-name">dew.poramate</span></div>
+            <div class="credit-meta"><div class="cm-label">Type</div><div class="cm-val">Official Visualizer</div></div>
+            <div class="credit-meta"><div class="cm-label">Label</div><div class="cm-val">SONY MUSIC</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="project-row">
+      <div class="project-header">
+        <span class="project-num">03</span>
+        <div>
+          <div class="project-artist">ALALA หาเพื่อน</div>
+          <div class="project-title">"Performance Content Series"</div>
+        </div>
+        <span class="project-tag">Direction</span>
+        <span class="project-year">2025</span>
+        <button class="project-toggle"><span>+</span></button>
+      </div>
+      <div class="project-body">
+        <div class="project-inner">
+          <div class="project-embed">
+            <div class="tt-cards">
+
+              <a class="tt-card" href="https://www.tiktok.com/@alala.whitefox/video/7581762778944392469" target="_blank" rel="noopener">
+                <img class="tt-card-bg" src="assets/tt-ep01.jpg" alt="EP.01 DREAM">
+                <span class="tt-card-ep">EP.01</span>
+                <svg class="tt-card-tiktok" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.29 6.29 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.79 1.53V6.77a4.85 4.85 0 01-1.02-.08z"/></svg>
+                <div class="tt-card-play"></div>
+                <div class="tt-card-info">
+                  <div class="tt-card-label">Dance Cover</div>
+                  <div class="tt-card-title">"DREAM"<br>LISA</div>
+                </div>
+                <div class="tt-card-bar"></div>
+              </a>
+
+              <a class="tt-card" href="https://www.tiktok.com/@alala.whitefox/video/7582841132728765716" target="_blank" rel="noopener">
+                <img class="tt-card-bg" src="assets/tt-ep02.jpg" alt="EP.02 IS IT">
+                <span class="tt-card-ep">EP.02</span>
+                <svg class="tt-card-tiktok" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.29 6.29 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.79 1.53V6.77a4.85 4.85 0 01-1.02-.08z"/></svg>
+                <div class="tt-card-play"></div>
+                <div class="tt-card-info">
+                  <div class="tt-card-label">Dance Cover</div>
+                  <div class="tt-card-title">"IS IT"<br>TYLA</div>
+                </div>
+                <div class="tt-card-bar"></div>
+              </a>
+
+              <a class="tt-card" href="https://www.tiktok.com/@alala.whitefox/video/7583942691550006548" target="_blank" rel="noopener">
+                <img class="tt-card-bg" src="assets/tt-ep03.jpg" alt="EP.03 GameBoy">
+                <span class="tt-card-ep">EP.03</span>
+                <svg class="tt-card-tiktok" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.29 6.29 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.79 1.53V6.77a4.85 4.85 0 01-1.02-.08z"/></svg>
+                <div class="tt-card-play"></div>
+                <div class="tt-card-info">
+                  <div class="tt-card-label">Dance Cover</div>
+                  <div class="tt-card-title">"GameBoy"<br>KATSEYE</div>
+                </div>
+                <div class="tt-card-bar"></div>
+              </a>
+
+              <a class="tt-card" href="https://www.tiktok.com/@alala.whitefox/video/7585429921502219541" target="_blank" rel="noopener">
+                <img class="tt-card-bg" src="assets/tt-ep04.jpg" alt="EP.04 WICKED">
+                <span class="tt-card-ep">EP.04</span>
+                <svg class="tt-card-tiktok" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.29 6.29 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.79 1.53V6.77a4.85 4.85 0 01-1.02-.08z"/></svg>
+                <div class="tt-card-play"></div>
+                <div class="tt-card-info">
+                  <div class="tt-card-label">Dance Cover</div>
+                  <div class="tt-card-title">"WICKED"<br>ALLDAY PROJECT</div>
+                </div>
+                <div class="tt-card-bar"></div>
+              </a>
+
+            </div>
+          </div>
+          <div class="project-credits">
+            <div class="credits-label">Credits</div>
+            <div class="credit-line"><span class="cr-role">Director</span><span class="cr-name">Medium Well Production</span></div>
+            <div class="credit-line"><span class="cr-role">Series</span><span class="cr-name">ALALA หาเพื่อน</span></div>
+            <div class="credit-line"><span class="cr-role">Artists</span><span class="cr-name">LISA Cover · TYLA · KATSEYE</span></div>
+            <div class="credit-meta"><div class="cm-label">Label</div><div class="cm-val">WhiteFoxGMM (GMM MUSIC)</div></div>
+            <div class="credit-meta"><div class="cm-label">Platform</div><div class="cm-val">TikTok</div></div>
+            <div class="credit-meta"><div class="cm-label">Format</div><div class="cm-val">4-Episode Series</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="about">
+  <div class="about-left">
+    <span class="about-tag">About the team</span>
+    <h2 class="about-heading">Bangkok<br>Based<br><em>Creatives</em></h2>
+    <p class="about-desc">
+      Medium Well Production is a Bangkok-based creative production team
+      built on raw energy and refined craft. From music video production
+      and direction to camera work, editing, and color grading — we bring
+      every frame to life with precision and passion.
+    </p>
+  </div>
+  <div class="about-right">
+    <ul class="services-list">
+      <li><span class="svc-num">01</span><span class="svc-name">Music Video Production</span><span class="svc-arr">→</span></li>
+      <li><span class="svc-num">02</span><span class="svc-name">Direction &amp; AD</span><span class="svc-arr">→</span></li>
+      <li><span class="svc-num">03</span><span class="svc-name">Camera &amp; Cinematography</span><span class="svc-arr">→</span></li>
+      <li><span class="svc-num">04</span><span class="svc-name">Edit &amp; Color Grade</span><span class="svc-arr">→</span></li>
+      <li><span class="svc-num">05</span><span class="svc-name">TikTok Content</span><span class="svc-arr">→</span></li>
+      <li><span class="svc-num">06</span><span class="svc-name">Performance Capture</span><span class="svc-arr">→</span></li>
+    </ul>
+  </div>
+</section>
+
+<div class="stats-row">
+  <div class="stat"><div class="stat-num">3<sup>+</sup></div><span class="stat-label">Projects Completed</span></div>
+  <div class="stat"><div class="stat-num">2<sup>K+</sup></div><span class="stat-label">Views Generated</span></div>
+  <div class="stat"><div class="stat-num">2<sup>nd</sup></div><span class="stat-label">Major Label Work</span></div>
+</div>
+
+<section id="contact">
+  <div>
+    <h2 class="contact-heading">LET'S<br>MAKE<br><em>SOMETHING</em></h2>
+  </div>
+  <div>
+    <div class="contact-line">
+      <span class="c-label">Email</span>
+      <a href="mailto:medium.wellp@gmail.com" class="c-val">medium.wellp@gmail.com</a>
+    </div>
+    <div class="contact-line">
+      <span class="c-label">Phone</span>
+      <span class="c-val">087 375 4455 / 094 251 8368</span>
+    </div>
+    <div class="social-links">
+      <a href="https://instagram.com/mediumwell.production" target="_blank" class="social-link">Instagram</a>
+      <a href="https://tiktok.com/@medium.wellp" target="_blank" class="social-link">TikTok</a>
+      <a href="https://facebook.com/61585152555089" target="_blank" class="social-link">Facebook</a>
+      <a href="https://linktr.ee/mediumwellproduciton" target="_blank" class="social-link">Linktree</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>© 2025 Medium Well Production</p>
+  <span class="footer-brand">Raw Energy. Refined Craft.</span>
+  <p>Bangkok, Thailand</p>
+</footer>
+
+<div id="modal" onclick="handleModalClick(event)">
+  <div class="modal-inner">
+    <button id="modal-close" onclick="closeModal()">✕ &nbsp;Close</button>
+    <div id="modal-frame"></div>
+  </div>
+</div>
+
+<!-- ── Plugins — loaded at bottom so HTML renders first ── -->
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/split-type@0.3.4/package/dist/SplitType.min.js"></script>
+
+<script>
+/* ── Modal (global — always available regardless of plugin load status) ── */
+let _lenis = null;
+
+function openModal(id) {
+  const modal = document.getElementById('modal');
+  document.getElementById('modal-frame').innerHTML =
+    `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&enablejsapi=1"
+     frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+     allowfullscreen referrerpolicy="strict-origin-when-cross-origin"
+     style="position:absolute;inset:0;width:100%;height:100%;border:none"></iframe>`;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (_lenis) _lenis.stop();
+  if (typeof gsap !== 'undefined') {
+    gsap.fromTo(modal, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power2.out' });
+  }
+}
+
+function closeModal() {
+  const modal = document.getElementById('modal');
+  const done = () => {
+    modal.classList.remove('open');
+    document.getElementById('modal-frame').innerHTML = '';
+    document.body.style.overflow = '';
+    if (_lenis) _lenis.start();
+  };
+  if (typeof gsap !== 'undefined') {
+    gsap.to(modal, { opacity: 0, duration: 0.22, ease: 'power2.in', onComplete: done });
+  } else { done(); }
+}
+
+function handleModalClick(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ── Accordion ── */
+function accordionOpen(row) {
+  const body = row.querySelector('.project-body');
+  const inner = row.querySelector('.project-inner');
+  row.classList.add('open');
+  const targetH = inner.getBoundingClientRect().height;
+  if (typeof gsap !== 'undefined') {
+    gsap.fromTo(body, { height: 0 }, { height: targetH, duration: 0.65, ease: 'power3.inOut',
+      onComplete() {
+        body.style.height = 'auto';
+        gsap.fromTo(row.querySelectorAll('.credit-line, .credit-meta'),
+          { opacity: 0, x: 10 },
+          { opacity: 1, x: 0, duration: 0.4, stagger: 0.04, ease: 'power3.out' }
+        );
+      }
+    });
+  } else {
+    body.style.height = targetH + 'px';
+  }
+}
+
+function accordionClose(row) {
+  const body = row.querySelector('.project-body');
+  row.classList.remove('open');
+  const currentH = body.getBoundingClientRect().height;
+  if (typeof gsap !== 'undefined') {
+    gsap.fromTo(body, { height: currentH }, { height: 0, duration: 0.45, ease: 'power3.inOut' });
+  } else {
+    body.style.height = '0';
+  }
+}
+
+document.querySelectorAll('.project-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const row = header.closest('.project-row');
+    const wasOpen = row.classList.contains('open');
+    document.querySelectorAll('.project-row.open').forEach(r => accordionClose(r));
+    if (!wasOpen) accordionOpen(row);
+  });
+});
+
+/* ── Smooth-scroll nav (no plugins needed) ── */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (!target) return;
+    e.preventDefault();
+    if (_lenis) {
+      _lenis.scrollTo(target, { offset: -80, duration: 1.4 });
+    } else {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+/* ── GSAP + Lenis + SplitType animations (progressive enhancement) ── */
+(function initAnimations() {
+  if (typeof gsap === 'undefined' || typeof Lenis === 'undefined' || typeof SplitType === 'undefined') {
+    console.info('MWP: animation libraries not loaded, skipping animations');
+    return;
+  }
+
+  /* Signal to CSS that JS is ready (enables .hero-line overflow:hidden) */
+  document.documentElement.classList.add('js-ready');
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* Lenis */
+  const lenis = new Lenis({
+    duration: 1.2,
+    easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smoothWheel: true,
+  });
+  gsap.ticker.add(time => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
+  lenis.on('scroll', ScrollTrigger.update);
+  _lenis = lenis;
+
+  /* ── Hero: SplitType char reveal ── */
+  const heroLines = document.querySelectorAll('.hero-line');
+  heroLines.forEach(line => {
+    const st = new SplitType(line, { types: 'chars' });
+    gsap.set(st.chars, { yPercent: 115 });
+  });
+
+  gsap.timeline({ delay: 0.1 })
+    .fromTo('.hero-eyebrow',   { opacity: 0, y: 8  }, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, 0.1)
+    .to(heroLines[0].querySelectorAll('.char'), { yPercent: 0, duration: 1.1, stagger: 0.04, ease: 'power4.out' }, 0.3)
+    .to(heroLines[1].querySelectorAll('.char'), { yPercent: 0, duration: 1.1, stagger: 0.04, ease: 'power4.out' }, 0.48)
+    .fromTo('.hero-sub',        { opacity: 0, y: 8  }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, 0.75)
+    .fromTo('.hero-meta span',  { opacity: 0, y: 6  }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out' }, 0.9)
+    .fromTo('.hero-scroll-ind', { opacity: 0 }, { opacity: 1, duration: 0.7, ease: 'power3.out' }, 1.05);
+
+  /* Hero parallax */
+  gsap.to('.hero-top', {
+    yPercent: 20, ease: 'none',
+    scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true },
+  });
+
+  /* Section titles — line reveal */
+  document.querySelectorAll('.section-title, .about-heading, .contact-heading').forEach(el => {
+    const st = new SplitType(el, { types: 'lines' });
+    st.lines.forEach(line => {
+      const wrap = document.createElement('span');
+      wrap.style.cssText = 'display:block;overflow:hidden;';
+      line.parentNode.insertBefore(wrap, line);
+      wrap.appendChild(line);
+    });
+    gsap.fromTo(st.lines,
+      { yPercent: 110 },
+      { yPercent: 0, duration: 1, stagger: 0.08, ease: 'power4.out',
+        scrollTrigger: { trigger: el, start: 'top 88%' } }
+    );
+  });
+
+  /* Section reveals */
+  const revealEls = ['.section-header', '.about-left', '.about-right', '#contact > div'];
+  revealEls.forEach((sel, i) => {
+    document.querySelectorAll(sel).forEach(el => {
+      gsap.fromTo(el,
+        { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, duration: 0.85, ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 88%' } }
+      );
+    });
+  });
+
+  /* Project rows stagger */
+  gsap.fromTo('.project-row',
+    { opacity: 0, y: 18 },
+    { opacity: 1, y: 0, duration: 0.65, stagger: 0.1, ease: 'power3.out',
+      scrollTrigger: { trigger: '.projects-list', start: 'top 80%' } }
+  );
+
+  /* Services stagger */
+  gsap.fromTo('.services-list li',
+    { opacity: 0, x: -12 },
+    { opacity: 1, x: 0, duration: 0.55, stagger: 0.07, ease: 'power3.out',
+      scrollTrigger: { trigger: '.services-list', start: 'top 82%' } }
+  );
+
+  /* Stats counter */
+  [{ i:0, n:3, s:'+' }, { i:1, n:2, s:'K+' }, { i:2, n:2, s:'nd' }].forEach(({ i, n, s }) => {
+    const el = document.querySelectorAll('.stat')[i];
+    const num = el?.querySelector('.stat-num');
+    if (!num) return;
+    gsap.fromTo(el, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.65, ease: 'power3.out',
+      scrollTrigger: { trigger: el, start: 'top 82%' } });
+    ScrollTrigger.create({
+      trigger: el, start: 'top 82%', once: true,
+      onEnter() {
+        const obj = { v: 0 };
+        gsap.to(obj, { v: n, duration: 1.4, ease: 'power2.out',
+          onUpdate() { num.innerHTML = Math.round(obj.v) + `<sup>${s}</sup>`; } });
+      },
+    });
+  });
+
+  /* Magnetic toggle buttons */
+  document.querySelectorAll('.project-toggle').forEach(btn => {
+    btn.addEventListener('mousemove', e => {
+      const r = btn.getBoundingClientRect();
+      gsap.to(btn, { x: (e.clientX - r.left - r.width/2) * 0.35, y: (e.clientY - r.top - r.height/2) * 0.35, duration: 0.3, ease: 'power2.out' });
+    });
+    btn.addEventListener('mouseleave', () => {
+      gsap.to(btn, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1,0.4)' });
+    });
+  });
+
+
+})();
+</script>
+</body>
+</html>
