@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Medium Well Production</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,6 +42,12 @@
       40% { transform:translate(2%,-3%);} 60% { transform:translate(-2%,3%); }
       80% { transform:translate(3%,-2%);} 100%{ transform:translate(-1%,1%); }
     }
+    @media (max-width: 768px) {
+      #grain { animation-duration: 1.2s; opacity: 0.025; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #grain { animation: none; }
+    }
 
     /* ── NAV ── */
     nav {
@@ -73,8 +79,11 @@
 
     /* ── HERO ── */
     #hero {
-      min-height: 100vh; display: flex; flex-direction: column;
+      min-height: 100svh; display: flex; flex-direction: column;
       padding: 0 48px; position: relative; overflow: hidden;
+    }
+    @supports not (min-height: 100svh) {
+      #hero { min-height: 100vh; }
     }
     .hero-top {
       flex: 1; display: flex; flex-direction: column;
@@ -283,11 +292,13 @@
     #modal-frame { width: 100%; height: 100%; }
     .modal-inner iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
     #modal-close {
-      position: fixed; top: 20px; right: 28px;
+      position: fixed;
+      top: max(20px, env(safe-area-inset-top, 20px));
+      right: max(28px, env(safe-area-inset-right, 28px));
       background: none; border: 1px solid var(--line);
       color: var(--muted); font-family: var(--M); font-size: 8px;
       letter-spacing: 0.4em; text-transform: uppercase; padding: 8px 16px;
-      transition: all .3s; z-index: 2100;
+      transition: all .3s; z-index: 2100; cursor: pointer;
     }
     #modal-close:hover { color: var(--lime); border-color: var(--lime); }
 
@@ -627,6 +638,26 @@
 /* ── Modal (global — always available regardless of plugin load status) ── */
 let _lenis = null;
 
+let _scrollY = 0;
+
+function lockBodyScroll() {
+  _scrollY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${_scrollY}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.overflow = 'hidden';
+}
+
+function unlockBodyScroll() {
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.overflow = '';
+  window.scrollTo(0, _scrollY);
+}
+
 function openModal(id) {
   const modal = document.getElementById('modal');
   document.getElementById('modal-frame').innerHTML =
@@ -635,7 +666,7 @@ function openModal(id) {
      allowfullscreen referrerpolicy="strict-origin-when-cross-origin"
      style="position:absolute;inset:0;width:100%;height:100%;border:none"></iframe>`;
   modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
+  lockBodyScroll();
   if (_lenis) _lenis.stop();
   if (typeof gsap !== 'undefined') {
     gsap.fromTo(modal, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power2.out' });
@@ -647,7 +678,7 @@ function closeModal() {
   const done = () => {
     modal.classList.remove('open');
     document.getElementById('modal-frame').innerHTML = '';
-    document.body.style.overflow = '';
+    unlockBodyScroll();
     if (_lenis) _lenis.start();
   };
   if (typeof gsap !== 'undefined') {
@@ -803,7 +834,11 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   );
 
   /* Stats counter */
-  [{ i:0, n:3, s:'+' }, { i:1, n:2, s:'K+' }, { i:2, n:2, s:'nd' }].forEach(({ i, n, s }) => {
+  [
+    { i:0, from:0, to:4, suffix:'+', format: v => Math.round(v) + '' },
+    { i:1, from:0, to:1.6, suffix:'M+', format: v => v.toFixed(1) },
+    { i:2, from:0, to:3, suffix:'rd', format: v => Math.round(v) + '' },
+  ].forEach(({ i, from, to, suffix, format }) => {
     const el = document.querySelectorAll('.stat')[i];
     const num = el?.querySelector('.stat-num');
     if (!num) return;
@@ -812,9 +847,9 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     ScrollTrigger.create({
       trigger: el, start: 'top 82%', once: true,
       onEnter() {
-        const obj = { v: 0 };
-        gsap.to(obj, { v: n, duration: 1.4, ease: 'power2.out',
-          onUpdate() { num.innerHTML = Math.round(obj.v) + `<sup>${s}</sup>`; } });
+        const obj = { v: from };
+        gsap.to(obj, { v: to, duration: 1.4, ease: 'power2.out',
+          onUpdate() { num.innerHTML = format(obj.v) + `<sup>${suffix}</sup>`; } });
       },
     });
   });
